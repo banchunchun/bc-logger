@@ -4,13 +4,15 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 
 
+import com.bc.logger.format.Formatter;
+import com.bc.logger.format.MessageFormatter;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 
 import java.util.Properties;
-import java.util.logging.Formatter;
+
 
 /**
  * Created with IntelliJ IDEA.

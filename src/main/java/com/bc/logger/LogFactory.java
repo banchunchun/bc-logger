@@ -68,14 +68,14 @@ public class LogFactory {
     private LogFactory() {
     }
 
-    public static ILog getLog(Class<?> aClass) {
-        return getLog(aClass.getName());
+    public static ILog getLog(Class<?> aClass,LogBusinessModule bm) {
+        return getLog(aClass.getName(),bm.name());
     }
 
 
-    public static ILog getLog(String logger) {
+    public static ILog getLog(String logger,String bm) {
         try {
-            return logConstructor.newInstance(new Object[] { logger});
+            return logConstructor.newInstance(new Object[] { logger,bm});
         } catch (Exception e) {
             throw new LogException("Error creating logger for logger " + logger + ".  Cause: " + e, e);
         }
