@@ -62,6 +62,10 @@ public class MessageFormatter implements Formatter {
         builder.append(QUOTE);
         builder.append(hostName);
         builder.append(QUOTE);
+        builder.append(le.getThreadName());
+        builder.append(QUOTE);
+        builder.append(le.getLoggerName());
+        builder.append(QUOTE);
         builder.append(getTime(le));
         builder.append(QUOTE);
         builder.append(le.getLevel().toString());
