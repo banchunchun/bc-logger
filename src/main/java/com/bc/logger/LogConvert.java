@@ -1,22 +1,28 @@
-package com.bc.logger.format;
+package com.bc.logger;
 
+import ch.qos.logback.classic.pattern.ClassicConverter;
 import ch.qos.logback.classic.spi.CallerData;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.CoreConstants;
+import com.google.gson.Gson;
 
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
+ * 重写Converter类，打印自己想要的格式
  * Created with IntelliJ IDEA.
  * User: banchun
- * Date:  2017-06-12
- * Time:  下午 7:45.
+ * Date:  2017-06-13
+ * Time:  下午 3:36.
  * Description:
  * To change this template use File | Settings | File Templates.
  */
-public class MessageFormatter implements Formatter {
-    private static final String QUOTE = "|";
+public class LogConvert extends ClassicConverter {
+
     static String hostName;
     static String localIp;
     long lastTimestamp = -1;
@@ -36,54 +42,40 @@ public class MessageFormatter implements Formatter {
         }
     }
 
-//    @Override
-//    public String format(ILoggingEvent event) {
-//        StringBuffer stringBuffer = new StringBuffer();
-//        stringBuffer.append("[");
-//        stringBuffer.append(event.getThreadName());
-//        stringBuffer.append("] ");
-//        stringBuffer.append(event.getLoggerName());
-//        stringBuffer.append(" - ");
-//        stringBuffer.append("[");
-//        stringBuffer.append(event.getLevel());
-//        stringBuffer.append("] ");
-//        stringBuffer.append(event.getFormattedMessage());
-//        return stringBuffer.toString();
-//    }
-
-
     @Override
-    public String format(ILoggingEvent le) {
-//        LogObject log = new LogObject();
-        StringBuilder builder = new StringBuilder();
-        builder.append(le.getMdc().get("requestId"));
-        builder.append(QUOTE);
-        builder.append(localIp);
-        builder.append(QUOTE);
-        builder.append(hostName);
-        builder.append(QUOTE);
-        builder.append(getTime(le));
-        builder.append(QUOTE);
-        builder.append(le.getLevel().toString());
-        builder.append(QUOTE);
-        builder.append(getFullyQualifiedName(le));
-        builder.append(QUOTE);
-        builder.append(getMethodName(le));
-        builder.append(QUOTE);
-        builder.append(getLineNumber(le));
-        builder.append(QUOTE);
-        builder.append(le.getFormattedMessage());
+    public String convert(ILoggingEvent le) {
+        LogObject log = new LogObject();
+        log.setBusiness(businessName);
+        log.setIp(localIp);
+        log.setHostName(hostName);
+        log.setTime(getTime(le));
+        log.setLeave(le.getLevel().toString());
+        log.setClassName(getFullyQualifiedName(le));
+        log.setMethodName(getMethodName(le));
+        log.setLine(getLineNumber(le));
+        log.setMessage(le.getFormattedMessage());
+        return new Gson().toJson(log);
+    }
 
-//        log.setBusiness(businessName);
-//        log.setIp(localIp);
-//        log.setHostName(hostName);
-//        log.setTime(getTime(le));
-//        log.setLeave(le.getLevel().toString());
-//        log.setClassName(getFullyQualifiedName(le));
-//        log.setMethodName(getMethodName(le));
-//        log.setLine(getLineNumber(le));
-//        log.setMessage(le.getFormattedMessage());
-        return builder.toString();
+    public void start() {
+        businessName = getFirstOption();
+        businessName = businessName == null ? "未设置产品线" : businessName;
+        String datePattern = "yyyy-MM-dd HH:mm:ss";
+        try {
+            simpleFormat = new SimpleDateFormat(datePattern);
+            // maximumCacheValidity =
+            // CachedDateFormat.getMaximumCacheValidity(pattern);
+        } catch (IllegalArgumentException e) {
+            addWarn("Could not instantiate SimpleDateFormat with pattern " + datePattern, e);
+            // default to the ISO8601 format
+            simpleFormat = new SimpleDateFormat(CoreConstants.ISO8601_PATTERN);
+        }
+        List optionList = getOptionList();
+        // if the option list contains a TZ option, then set it.
+        if (optionList != null && optionList.size() > 1) {
+            TimeZone tz = TimeZone.getTimeZone((String) optionList.get(1));
+            simpleFormat.setTimeZone(tz);
+        }
     }
 
     private String getTime(ILoggingEvent le) {
@@ -242,5 +234,4 @@ public class MessageFormatter implements Formatter {
         }
 
     }
-
 }

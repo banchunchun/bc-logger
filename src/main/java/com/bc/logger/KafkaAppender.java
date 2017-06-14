@@ -4,7 +4,10 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 
 
+import ch.qos.logback.core.Layout;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import com.bc.logger.format.Formatter;
+import com.bc.logger.format.JsonFormatter;
 import com.bc.logger.format.MessageFormatter;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -12,6 +15,8 @@ import kafka.producer.ProducerConfig;
 
 
 import java.util.Properties;
+
+import static ch.qos.logback.core.CoreConstants.CODES_URL;
 
 
 /**
@@ -27,6 +32,16 @@ public class KafkaAppender extends AppenderBase<ILoggingEvent> {
     private String brokerList;
     private Producer<String, String> producer;
     private Formatter formatter;
+
+    private Layout layout;
+
+    public Layout getLayout() {
+        return layout;
+    }
+
+    public void setLayout(Layout layout) {
+        this.layout = layout;
+    }
 
     public KafkaAppender() {
     }
@@ -63,8 +78,13 @@ public class KafkaAppender extends AppenderBase<ILoggingEvent> {
         props.put("metadata.broker.list", this.brokerList);
         props.put("serializer.class", "kafka.serializer.StringEncoder");
         ProducerConfig config = new ProducerConfig(props);
+        LayoutWrappingEncoder<?> lwe = new LayoutWrappingEncoder<>();
+        lwe.setLayout(this.layout);
+        lwe.setContext(context);
         this.producer = new Producer(config);
     }
+
+
 
     public void stop() {
         super.stop();
@@ -76,4 +96,6 @@ public class KafkaAppender extends AppenderBase<ILoggingEvent> {
         KeyedMessage<String, String> data = new KeyedMessage<>(topic, payLoad);
         this.producer.send(data);
     }
+
+
 }
